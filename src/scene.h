@@ -22,6 +22,8 @@ private:
     int loadMaterial(string materialid);
     int loadObject(string objectid);
     int loadCamera();
+	int readObjFile(geom& newObject, string filename);
+
 public:
     scene(string filename);
     ~scene();

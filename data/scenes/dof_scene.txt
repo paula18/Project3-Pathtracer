@@ -136,7 +136,7 @@ FOVY        25
 ITERATIONS  5000
 FILE        test.bmp
 APERTURE    0.5
-FOCAL       0
+FOCAL       5
 frame 0
 EYE         0 4.5 12
 VIEW        0 0 -1
@@ -152,7 +152,7 @@ SCALE       .01 10 10
 
 OBJECT 1
 cube
-material 0
+material 9
 frame 0
 TRANS       0 5 -5
 ROTAT       0 90 0
@@ -186,7 +186,7 @@ OBJECT 5
 sphere
 material 10
 frame 0
-TRANS       0 2 0
+TRANS       0 5 0
 ROTAT       0 180 0
 SCALE       3 3 3
 
@@ -194,7 +194,7 @@ OBJECT 6
 sphere
 material 5
 frame 0
-TRANS       2 5 2
+TRANS       2 5 5
 ROTAT       0 180 0
 SCALE       2.5 2.5 2.5
 
@@ -202,7 +202,7 @@ OBJECT 7
 sphere
 material 6
 frame 0
-TRANS       -2 5 -2
+TRANS       -2 5 -5
 ROTAT       0 180 0
 SCALE       3 3 3
 

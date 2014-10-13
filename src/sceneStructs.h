@@ -10,16 +10,51 @@
 #include "cudaMat4.h"
 #include <cuda_runtime.h>
 #include <string>
+#include <vector>
 
 enum GEOMTYPE{ SPHERE, CUBE, MESH };
 
-struct ray {
+using namespace std;
+
+
+struct ray 
+{
 	glm::vec3 origin;
 	glm::vec3 direction;
+	glm::vec3 color;
+	bool exist;
+	glm::vec2 pixelPos;
+	int pixelIndex;
 };
 
-struct geom {
+struct obj
+{
+
+	std::vector<glm::vec3> vertex; 
+	std::vector<glm::vec3> normal;
+	std::vector<glm::vec3> faces; 
+
+	int numberOfVertices; 
+	int numberOfFaces;
+
+};
+
+struct cudaobj
+{
+
+	glm::vec3* vertex; 
+	glm::vec3* normal;
+	glm::vec3* faces; 
+
+	int numberOfVertices; 
+	int numberOfFaces;
+
+};
+
+struct geom 
+{
 	enum GEOMTYPE type;
+	obj objMesh; 
 	int materialid;
 	int frames;
 	glm::vec3* translations;
@@ -27,27 +62,35 @@ struct geom {
 	glm::vec3* scales;
 	cudaMat4* transforms;
 	cudaMat4* inverseTransforms;
+	int ID; 
 };
 
-struct staticGeom {
+struct staticGeom 
+{
 	enum GEOMTYPE type;
+	cudaobj objMesh; 
 	int materialid;
 	glm::vec3 translation;
 	glm::vec3 rotation;
 	glm::vec3 scale;
 	cudaMat4 transform;
 	cudaMat4 inverseTransform;
+	int ID; 
 };
 
-struct cameraData {
+struct cameraData 
+{
 	glm::vec2 resolution;
 	glm::vec3 position;
 	glm::vec3 view;
 	glm::vec3 up;
 	glm::vec2 fov;
+	float aperture;
+	float focal;
 };
 
-struct camera {
+struct camera 
+{
 	glm::vec2 resolution;
 	glm::vec3* positions;
 	glm::vec3* views;
@@ -58,9 +101,13 @@ struct camera {
 	glm::vec3* image;
 	ray* rayList;
 	std::string imageName;
+	float aperture;
+	float focal;
 };
 
-struct material{
+struct material
+{
+	enum MATERIALTYPE mattype;
 	glm::vec3 color;
 	float specularExponent;
 	glm::vec3 specularColor;
@@ -72,5 +119,7 @@ struct material{
 	float reducedScatterCoefficient;
 	float emittance;
 };
+
+
 
 #endif //CUDASTRUCTS_H

@@ -6,7 +6,15 @@
 //       Yining Karl Li's TAKUA Render, a massively parallel pathtracing renderer: http://www.yiningkarlli.com
 
 #include "main.h"
+
+#include <windows.h>
+#include <gl/GL.h>
+#include <gl/GLU.h>
+#include <gl/glut.h>
+
+
 #define GLEW_STATIC
+
 
 //-------------------------------
 //-------------MAIN--------------
@@ -61,7 +69,8 @@ int main(int argc, char** argv){
   // Initialize CUDA and GL components
   if (init(argc, argv)) {
     // GLFW main loop
-    mainLoop();
+
+	mainLoop();
   }
 
   return 0;
@@ -72,9 +81,10 @@ void mainLoop() {
     glfwPollEvents();
     runCuda();
 
-    string title = "CIS565 Render | " + utilityCore::convertIntToString(iterations) + " Iterations";
-		glfwSetWindowTitle(window, title.c_str());
-    
+    string title = "CIS565 Render | " + utilityCore::convertIntToString(iterations) + " Iterations ";
+	glfwSetWindowTitle(window, title.c_str());
+
+	    
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
     glBindTexture(GL_TEXTURE_2D, displayImage);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -83,7 +93,8 @@ void mainLoop() {
     // VAO, shader program, and texture already bound
     glDrawElements(GL_TRIANGLES, 6,  GL_UNSIGNED_SHORT, 0);
     glfwSwapBuffers(window);
-  }
+
+	}
   glfwDestroyWindow(window);
   glfwTerminate();
 }
@@ -98,6 +109,13 @@ void runCuda(){
   // No data is moved (Win & Linux). When mapped to CUDA, OpenGL should not use this buffer
   
   if(iterations < renderCam->iterations){
+
+	cudaEvent_t start,stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	float time; 
+	cudaEventRecord(start, 0);
+
     uchar4 *dptr=NULL;
     iterations++;
     cudaGLMapBufferObject((void**)&dptr, pbo);
@@ -105,17 +123,32 @@ void runCuda(){
     // pack geom and material arrays
     geom* geoms = new geom[renderScene->objects.size()];
     material* materials = new material[renderScene->materials.size()];
-    
-    for (int i=0; i < renderScene->objects.size(); i++) {
+
+    for (int i=0; i < renderScene->objects.size(); i++) 
+	{
       geoms[i] = renderScene->objects[i];
     }
-    for (int i=0; i < renderScene->materials.size(); i++) {
+    for (int i=0; i < renderScene->materials.size(); i++) 
+	{
       materials[i] = renderScene->materials[i];
     }
-  
-    // execute the kernel
-    cudaRaytraceCore(dptr, renderCam, targetFrame, iterations, materials, renderScene->materials.size(), geoms, renderScene->objects.size() );
-    
+	
+	
+	// execute the kernel
+    cudaRaytraceCore(dptr, renderCam, targetFrame, iterations, materials, renderScene->materials.size(), geoms, renderScene->objects.size());//, objs, renderScene->objs.size() );
+	cudaEventRecord(stop, 0); 
+	cudaEventSynchronize(stop); 
+
+	cudaEventElapsedTime(&time, start, stop); 
+
+	totalTime += time;
+
+	std::cout << "Iterations: " << iterations << " Time: " << time <<  std::endl;
+
+	if (iterations == 25)
+	{
+		std::cout << "Iterations: " << iterations << " Time: " << time << " Average Time: " << totalTime / iterations << std::endl;
+	}
     // unmap buffer object
     cudaGLUnmapBufferObject(pbo);
   } else {
@@ -165,12 +198,22 @@ void runCuda(){
   }
 }
 
+void clearImage(camera* camera)
+{
+	int index = camera->resolution.x * camera->resolution.y;
+	for (int i = 0; i < index; ++i)
+	{
+		camera->image[i] = glm::vec3(0.0f);
+	}
+}
+
 //-------------------------------
 //----------SETUP STUFF----------
 //-------------------------------
 
 bool init(int argc, char* argv[]) {
-  glfwSetErrorCallback(errorCallback);
+
+	glfwSetErrorCallback(errorCallback);
 
   if (!glfwInit()) {
       return false;
@@ -185,7 +228,8 @@ bool init(int argc, char* argv[]) {
   }
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
-
+  //glfwSetKeyCallback(window, mouseMovement);
+ 
   // Set up GL context
   glewExperimental = GL_TRUE;
   if(glewInit()!=GLEW_OK){
@@ -203,7 +247,7 @@ bool init(int argc, char* argv[]) {
 
   glUseProgram(passthroughProgram);
   glActiveTexture(GL_TEXTURE0);
-
+ 
   return true;
 }
 
@@ -275,6 +319,7 @@ void initVAO(void){
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjID[2]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 }
 
 GLuint initShader() {
@@ -316,7 +361,33 @@ void deleteTexture(GLuint* tex){
     glDeleteTextures(1, tex);
     *tex = (GLuint)NULL;
 }
+void saveImage()
+{
+	image outputImage(renderCam->resolution.x, renderCam->resolution.y);
 
+      for (int x=0; x < renderCam->resolution.x; x++) 
+	  {
+        for (int y=0; y < renderCam->resolution.y; y++) 
+		{
+			int index = x + (y * renderCam->resolution.x);
+			outputImage.writePixelRGB(renderCam->resolution.x-1-x,y,renderCam->image[index]);
+        }
+      }
+      
+      gammaSettings gamma;
+      gamma.applyGamma = true;
+      gamma.gamma = 1.0;
+      gamma.divisor = 1.0; 
+      outputImage.setGammaSettings(gamma);
+      string filename = renderCam->imageName;
+      string s;
+      stringstream out;
+      out << targetFrame;
+      s = out.str();
+      utilityCore::replaceString(filename, ".bmp", "."+s+".bmp");
+      outputImage.saveImageRGB(filename);
+      cout << "Saved frame " << s << " to " << filename << endl;
+}
 //------------------------------
 //-------GLFW CALLBACKS---------
 //------------------------------
@@ -329,4 +400,64 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+
+	//CAMERA MOTION
+	if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+	{
+		renderCam->positions->y += 0.5;
+		clearImage(renderCam);
+	}
+	if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	{
+		renderCam->positions->y -= 0.5;
+		clearImage(renderCam);
+	}
+	if(key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+	{
+		renderCam->positions->x -= 0.5;
+		clearImage(renderCam);
+	}
+	if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	{
+		renderCam->positions->x += 0.5;
+		clearImage(renderCam);
+	}
+	if(key == GLFW_KEY_RIGHT_SHIFT && action == GLFW_PRESS)
+	{
+		renderCam->positions->z += 0.5;
+		clearImage(renderCam);
+	}
+	if(key == GLFW_KEY_RIGHT_CONTROL && action == GLFW_PRESS)
+	{
+		renderCam->positions->z -= 0.5;
+		clearImage(renderCam);
+	}
+
+	//DEPTH OF FIELD MOTION
+	if(key == GLFW_KEY_D && action == GLFW_PRESS)
+	{
+		if(renderCam->focal >= 0)
+		{
+			renderCam->focal += 1; 
+			clearImage(renderCam);
+			std::cout << "DEPTH OF FIELD: ON" << std::endl;
+			std::cout << "Focal Length ++ 1" << std::endl;
+		}
+	}
+	if(key == GLFW_KEY_F && action == GLFW_PRESS)
+	{
+		if(renderCam->focal >= 0)
+		{
+			renderCam->focal -= 1; 
+			clearImage(renderCam);
+			std::cout << "DEPTH OF FIELD: ON" << std::endl;
+			std::cout << "Focal Length -- 1" << std::endl;
+		}
+	}
+
+	//SAVE IMAGE
+	if(key == GLFW_KEY_S && action == GLFW_PRESS)
+	{		
+		saveImage();
+	}
 }

@@ -43,7 +43,7 @@ int scene::loadObject(string objectid){
         cout << "Loading Object " << id << "..." << endl;
         geom newObject;
         string line;
-        
+		newObject.ID = id;
         //load object type 
         utilityCore::safeGetline(fp_in,line);
         if (!line.empty() && fp_in.good()){
@@ -63,6 +63,7 @@ int scene::loadObject(string objectid){
                 if(strcmp(extension.c_str(), "obj")==0){
                     cout << "Creating new mesh..." << endl;
                     cout << "Reading mesh from " << line << "... " << endl;
+					readObjFile(newObject, line);
 		    		newObject.type = MESH;
                 }else{
                     cout << "ERROR: " << line << " is not a valid object type!" << endl;
@@ -118,6 +119,7 @@ int scene::loadObject(string objectid){
 	newObject.scales = new glm::vec3[frameCount];
 	newObject.transforms = new cudaMat4[frameCount];
 	newObject.inverseTransforms = new cudaMat4[frameCount];
+
 	for(int i=0; i<frameCount; i++){
 		newObject.translations[i] = translations[i];
 		newObject.rotations[i] = rotations[i];
@@ -140,7 +142,7 @@ int scene::loadCamera(){
 	float fovy;
 	
 	//load static properties
-	for(int i=0; i<4; i++){
+	for(int i=0; i<6; i++){
 		string line;
         utilityCore::safeGetline(fp_in,line);
 		vector<string> tokens = utilityCore::tokenizeString(line);
@@ -152,6 +154,10 @@ int scene::loadCamera(){
 			newCamera.iterations = atoi(tokens[1].c_str());
 		}else if(strcmp(tokens[0].c_str(), "FILE")==0){
 			newCamera.imageName = tokens[1];
+		}else if(strcmp(tokens[0].c_str(), "APERTURE")==0){
+			newCamera.aperture = atof(tokens[1].c_str());
+		}else if(strcmp(tokens[0].c_str(), "FOCAL")==0){
+			newCamera.focal = atof(tokens[1].c_str());
 		}
 	}
         
@@ -218,7 +224,88 @@ int scene::loadCamera(){
 	cout << "Loaded " << frameCount << " frames for camera!" << endl;
 	return 1;
 }
+int scene::readObjFile(geom& newObj, string file)
+{
+	std::vector<unsigned int> vertexID, uvID, normalID; 
+	std::vector<glm::vec3> temp_vertices;
+	std::vector<glm::vec2> temp_uvs;
+	std::vector<glm::vec3> temp_normals;
 
+	char* filename = (char*)file.c_str();
+	ifstream fname;
+	fname.open(filename);
+
+	std::vector<glm::vec3>temp_vertex ; 
+	std::vector<glm::vec3>temp_faces ;
+	std::vector<glm::vec3>temp_normal ;
+	
+	if(fname.is_open())
+	{
+		while(fname.good())
+		{			
+			string line; 
+			utilityCore::safeGetline(fname, line); 
+			if (!line.empty())
+			{
+				vector<string> tokens = utilityCore::tokenizeString(line);
+				if (tokens.size() > 0) 
+				{
+					if (strcmp(tokens[0].c_str(), "v") == 0) 
+					{
+						glm::vec3 vertex = glm::vec3( atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str())); 
+						
+						newObj.objMesh.vertex.push_back(vertex); 
+						//temp_vertex.push_back(vertex); 
+					}
+					/*else if (strcmp(tokens[0].c_str(), "vt") == 0)
+					{
+						glm::vec2 uv(atof(tokens[1].c_str()), atof(tokens[2].c_str())); 
+						temp_uvs.push_back(uv); 
+					}
+					else if (strcmp(tokens[0].c_str(), "vn") == 0)
+					{
+						glm::vec3 normal(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str())); 
+						temp_normals.push_back(normal); 
+					}*/
+					else if (strcmp(tokens[0].c_str(), "f") == 0)
+					{
+						glm::vec3 faceIndeces; 
+						faceIndeces[0] = atof(tokens[1].c_str())-1; 
+						faceIndeces[1] = atof(tokens[2].c_str())-1;
+						faceIndeces[2] = atof(tokens[3].c_str())-1;
+
+						newObj.objMesh.faces.push_back(faceIndeces);
+
+					}
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < newObj.objMesh.faces.size(); ++i)
+	{
+		int id1 = newObj.objMesh.faces[i].x;
+		int id2 = newObj.objMesh.faces[i].y; 
+		int id3 = newObj.objMesh.faces[i].z; 
+
+		glm::vec3 v1 = newObj.objMesh.vertex[id1];
+		glm::vec3 v2 = newObj.objMesh.vertex[id2];
+		glm::vec3 v3 = newObj.objMesh.vertex[id3];
+
+		glm::vec3 normal = glm::normalize(glm::cross(v2-v1, v3-v1)); 
+		newObj.objMesh.normal.push_back(normal);
+	
+	}
+
+
+	newObj.objMesh.numberOfFaces = newObj.objMesh.faces.size(); 
+	newObj.objMesh.numberOfVertices = newObj.objMesh.vertex.size(); 
+	
+
+	return 0; 
+
+
+}
 int scene::loadMaterial(string materialid){
 	int id = atoi(materialid.c_str());
 	if(id!=materials.size()){

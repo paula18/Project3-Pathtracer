@@ -21,11 +21,11 @@
 #include <stdlib.h>
 #include <string>
 
-#include "sceneStructs.h"
 #include "image.h"
 #include "raytraceKernel.h"
 #include "utilities.h"
 #include "scene.h"
+
 
 using namespace std;
 
@@ -39,6 +39,9 @@ int targetFrame;
 int iterations;
 bool finishedRender;
 bool singleFrameMode;
+//bool DOF = false;
+bool motionBlur = false;
+float totalTime = 0.0f;
 
 //-------------------------------
 //------------GL STUFF-----------
@@ -100,6 +103,11 @@ void deleteTexture(GLuint* tex);
 //------------------------------
 void mainLoop();
 void errorCallback(int error, const char *description);
-void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouseMovement(GLFWwindow *window, int key, int scancode, int action, int mods);
+
+//------------------------------
+//-------INTERACTIONS-----------
+//------------------------------
 
 #endif
