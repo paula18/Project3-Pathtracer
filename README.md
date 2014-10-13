@@ -53,16 +53,25 @@ be generated.
 
 The objects in this scene have the three basic surfaces: diffuse, reflective and refractive. 
 
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/basicFeatures.PNG)
 
 Here I included depth of field. The camera is focused on the middle scene. There was a bug with my box-ray intersection function that I did not realize before rendering this
 image. That is why the top of the back box is a little darker. But that bug has been fixed!
 
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/DOF3.PNG)
+
 This image includes motion blur. The green sphere is a mix of diffuse and reflective surfaces. I set a threshold and generate a random number. If this number is below the threshold, 
 diffuse coloring is added to the accumulated color, otherwise, reflection is taken into account. 
 
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/motionBlur4.PNG)
+
 Here you can see the OBJ loading and rendering feature. 
 
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/objMesh.PNG)
+
 Here is a cool image of a bug. It happened when I changed the random seed when generating the direction of the outgoing ray from a diffuse surface. 
+
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/bug1.PNG)
 
 ## PERFORMANCE ANALISIS
 
@@ -70,5 +79,6 @@ To analyse the perfomance of my path tracer I looked at two variables: the tile 
 As the table shows and as expected, the number of bounces increases the runtime. The tile size does help for a better performance. However the best option 
 is to use a 16 tile size. Higher lead to a slow down of the code. 
 
+![alt tag](https://github.com/paula18/Project3-Pathtracer/blob/master/performance.PNG)
 
 
