@@ -202,25 +202,25 @@ __host__ __device__ int calculateBSDF(glm::vec2 resolution, ray& r, glm::vec3 in
 		
 		float diffuseExponent = 0.8f;
 
-		if (random3 < diffuseExponent)
-		{
-			r.direction = glm::normalize(calculateRandomDirectionInHemisphere(intersectionNormal, random, random2));
-			r.origin = intersectionPoint  + 1e-3f * r.direction; 
+	//	if (random3 < diffuseExponent)
+		//{
+			//r.direction = glm::normalize(calculateRandomDirectionInHemisphere(intersectionNormal, random, random2));
+			//r.origin = intersectionPoint  + 1e-3f * r.direction; 
 
-			r.color *= m.color;
+//			r.color *= m.color;
 
-			return 0;
+	//		return 0;
 				
-		}
-		else
-		{
+	//	}
+		///else
+		//{
 			r.direction = calculateReflectionDirection(intersectionNormal, r.direction);
 			r.origin = intersectionPoint  + 1e-3f * r.direction; 
 			r.color *= m.specularColor; 		
 		
 			return 1;
 		
-		}
+	//	}
 	}
 
 	//Refractive clase

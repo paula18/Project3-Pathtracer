@@ -268,7 +268,7 @@ void cudaRaytraceCore(uchar4* PBOpos, camera* renderCam, int frame, int iteratio
 {
 
 
-	int traceDepth = 4;      //determines how many bounces the raytracer traces
+	int traceDepth = 2;      //determines how many bounces the raytracer traces
 
 	// set up crucial magic
 	int tileSize = 16;

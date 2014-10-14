@@ -228,7 +228,7 @@ bool init(int argc, char* argv[]) {
   }
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
-  //glfwSetKeyCallback(window, mouseMovement);
+  glfwSetMouseButtonCallback(window, mouseCallback);
  
   // Set up GL context
   glewExperimental = GL_TRUE;
@@ -394,6 +394,30 @@ void saveImage()
 
 void errorCallback(int error, const char* description){
     fputs(description, stderr);
+}
+
+void mouseCallback(GLFWwindow* window, int key, int action, int mods)
+{
+	if (key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		double *mouseXPos, *mouseYPos;
+		glfwGetCursorPos (window, mouseXPos, mouseYPos); 
+
+		//Convert to world coordinates
+		glm::vec3 A = glm::cross(renderCam->views[0], renderCam->ups[0]);
+		glm::vec3 B = glm::cross(A, renderCam->ups[0]);	//B is in the correct plane
+		glm::vec3 M = renderCam->positions[0] + renderCam->ups[0];			    //Midpoint of screen
+		glm::vec3 H = glm::normalize(A) * glm::length(renderCam->views[0]) * glm::tan(glm::radians(renderCam->fov.x));
+		glm::vec3 V = glm::normalize(B) * glm::length(renderCam->views[0]) * glm::tan(glm::radians(renderCam->fov.y));
+	
+		float sx = *mouseXPos / ( (float)renderCam->resolution.x - 1.0f);
+		float sy = *mouseXPos / ( (float)renderCam->resolution.y - 1.0f);
+
+		glm::vec3 mouseWorldPos = M + (2*sx - 1.0f) * H + (-2.0f * sy + 1.0f) * V;
+		
+		std::cout << mouseWorldPos.x << std::endl;
+	}
+
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
