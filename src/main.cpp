@@ -228,7 +228,7 @@ bool init(int argc, char* argv[]) {
   }
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
-  glfwSetMouseButtonCallback(window, mouseCallback);
+  //glfwSetMouseButtonCallback(window, mouseCallback);
  
   // Set up GL context
   glewExperimental = GL_TRUE;
@@ -395,7 +395,7 @@ void saveImage()
 void errorCallback(int error, const char* description){
     fputs(description, stderr);
 }
-
+/*
 void mouseCallback(GLFWwindow* window, int key, int action, int mods)
 {
 	if (key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -419,7 +419,7 @@ void mouseCallback(GLFWwindow* window, int key, int action, int mods)
 	}
 
 }
-
+*/
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
         glfwSetWindowShouldClose(window, GL_TRUE);
